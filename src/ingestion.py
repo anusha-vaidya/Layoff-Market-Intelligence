@@ -1,8 +1,6 @@
 """
-PROJECT: Layoff Market Intelligence
 MODULE: Ingestion Engine
-DESCRIPTION: This script handles the automated extraction of news signals 
-             and market data, storing them in a local DuckDB instance.
+DESCRIPTION: This script handles the automated extraction of news signals and market data, storing them in a local DuckDB instance.
 """
 
 import requests
