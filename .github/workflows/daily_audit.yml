@@ -1,37 +1,34 @@
-# Workflow runs the data pipeline automatically everyday
 name: Daily Labor Intelligence Audit
 
 on:
   schedule:
     - cron: '0 0 * * *'
-    workflow_dispatch:                # Allows you to run it manually for testing
+  workflow_dispatch: # This line creates the blue button!
 
 jobs:
   build:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # This tells GitHub explicitly that this script can save files
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-        - name: Set up Python
-          uses: actions/setup-python@v5
-          with:
-              python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-        - name: Install dependencies
-          run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install requests pandas yfinance duckdb pyarrow
 
-        - name: Run Ingestion Engine
-          run: python src/ingestion.py
+      - name: Run Ingestion Engine
+        run: python src/ingestion.py
 
-          #Save the data to the repo so it builds over 5 years
-        - name: Commit data update
-          run: |
-              git config --local user.email "action@github.com"
-              git config --local user.name "Github Action"
-              git add data/layoff_intelligence.db
-              git commit -m "auto: daily data sync [skip ci]" || echo "No changes to commit"
-              git push
-
-
-              
+      - name: Commit data update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/layoff_intelligence.db
+          git commit -m "auto: daily data sync" || echo "No changes to commit"
+          git push
