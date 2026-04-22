@@ -1,1 +1,37 @@
+# Workflow runs the data pipeline automatically everyday
+name: Daily Labor Intelligence Audit
 
+on:
+  schedule:
+    - cron: '0 0 * * *'
+    workflow_dispatch:                # Allows you to run it manually for testing
+
+jobs:
+  build:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Set up Python
+          uses: actions/setup-python@v5
+          with:
+              python-version: '3.11'
+
+        - name: Install dependencies
+          run: pip install -r requirements.txt
+
+        - name: Run Ingestion Engine
+          run: python src/ingestion.py
+
+          #Save the data to the repo so it builds over 5 years
+        - name: Commit data update
+          run: |
+              git config --local user.email "action@github.com"
+              git config --local user.name "Github Action"
+              git add data/layoff_intelligence.db
+              git commit -m "auto: daily data sync [skip ci]" || echo "No changes to commit"
+              git push
+
+
+              
