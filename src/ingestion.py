@@ -84,25 +84,15 @@ def  fetch_market_context():
         price = hist['Close'].iloc[-1]
         vol = hist['Volume'].iloc[-1]
         con.execute("INSERT INTO market_data VALUES (?, ?, ?, ?)", [datetime.now(), ticker, price, vol])
-    except Eception as e:
+    except Exception as e:
       print(f"Could not fetch data for {ticker}: {e}")
 
   con.close()
   print("Market data sync complete")
 
 if __main__ == "__main__":
-
-
-
-
-
-
-
-
-
-
-
-
-
+  initialize_database()
+  fetch_layoff_news()
+  fetch_market_context()
 
 
