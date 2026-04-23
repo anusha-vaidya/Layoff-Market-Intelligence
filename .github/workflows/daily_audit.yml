@@ -5,11 +5,6 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
-# This tells GitHub to stop worrying about the Node version and just run the code
-env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true 
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,6 +18,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip' # Speeds up future runs
 
       - name: Install dependencies
         run: |
@@ -30,20 +26,22 @@ jobs:
           pip install requests pandas yfinance duckdb pyarrow
 
       - name: Run Ingestion Engine
-        # We add 'python' explicitly here to ensure the environment is used
-        run: python src/ingestion.py
+        run: |
+          # Ensure the data directory exists before running
+          mkdir -p data
+          python src/ingestion.py
 
       - name: Commit data update
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Check if the file exists before trying to add it
+          # Force add the database if it was created
           if [ -f data/layoff_intelligence.db ]; then
-            git add data/layoff_intelligence.db
+            git add -f data/layoff_intelligence.db
             git commit -m "auto: daily data sync" || echo "No changes to commit"
             git push
           else
-            echo "Error: Database file was not created by the script."
+            echo "Database file not found. Check src/ingestion.py for errors."
             exit 1
           fi
