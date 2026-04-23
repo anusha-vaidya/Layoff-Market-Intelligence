@@ -3,24 +3,30 @@ name: Daily Labor Intelligence Audit
 on:
   schedule:
     - cron: '0 0 * * *'
-  workflow_dispatch: # This line creates the blue button!
+  workflow_dispatch:
+
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # This tells GitHub explicitly that this script can save files
+      contents: write 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5 
         with:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests pandas yfinance duckdb pyarrow
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas yfinance duckdb pyarrow
 
       - name: Run Ingestion Engine
         run: python src/ingestion.py
@@ -29,6 +35,12 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data/layoff_intelligence.db
-          git commit -m "auto: daily data sync" || echo "No changes to commit"
-          git push
+          # Only commit if the file actually exists and has changed
+          if [ -f data/layoff_intelligence.db ]; then
+            git add data/layoff_intelligence.db
+            git commit -m "auto: daily data sync" || echo "No changes to commit"
+            git push
+          else
+            echo "Database file not found. Skipping commit."
+            exit 1
+          fi
