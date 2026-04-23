@@ -18,30 +18,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip' # Speeds up future runs
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests pandas yfinance duckdb pyarrow
+        run: pip install requests pandas yfinance duckdb pyarrow
 
-      - name: Run Ingestion Engine
-        run: |
-          # Ensure the data directory exists before running
-          mkdir -p data
-          python src/ingestion.py
+      - name: Run Pipeline
+        run: python src/ingestion.py
 
-      - name: Commit data update
+      - name: Commit and Push Data
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
-          # Force add the database if it was created
-          if [ -f data/layoff_intelligence.db ]; then
-            git add -f data/layoff_intelligence.db
-            git commit -m "auto: daily data sync" || echo "No changes to commit"
-            git push
-          else
-            echo "Database file not found. Check src/ingestion.py for errors."
-            exit 1
-          fi
+          git add data/layoff_intelligence.db
+          git commit -m "auto: daily data sync" || echo "No changes to commit"
+          git push
